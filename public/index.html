@@ -98,7 +98,7 @@
   </style>
 </head>
 <body>
-    <div class="scorebar">
+    <div class="scorebar" style="display:flex; flex-direction:row; align-items:center; width:100%;">
       <div class="score-section left">
         <span id="name1">Player 1</span>
       </div>
@@ -106,7 +106,7 @@
         <span id="player1">0</span>
       </div>
       <div class="score-section center" style="justify-content: center;">
-  Race to <span id="race" style="font-size:115%; margin-left:0.3em; vertical-align:middle;">7</span>
+        Race to <span id="race" style="font-size:115%; margin-left:0.3em; vertical-align:middle;">7</span>
       </div>
       <div class="score-section center" style="justify-content: flex-start;">
         <span id="player2">0</span>
@@ -115,11 +115,6 @@
         <span id="name2">Player 2</span>
       </div>
     </div>
-      <svg id="memorial-arch" height="16" style="position:fixed; left:50%; transform:translateX(-50%); bottom:calc(8vh - 2.5vh); display:block; margin:0 auto; width:fit-content; z-index:3;">
-  <!-- SVG arch removed -->
-      <div id="tournament-title" style="position:fixed; left:50%; transform:translateX(-50%); bottom:2.5vh; font-family:'Metal Mania', Arial, sans-serif; font-size:1.4vh; color:#fff; letter-spacing:0.05em; text-align:center; background:linear-gradient(90deg, #23235b 0%, #3a3a6c 50%, #23235b 100%); border:2px solid #6a5acd; box-shadow:none; height:2.5vh; border-radius:0 0 40px 40px; padding:0.3vh 1vw; display:flex; align-items:center; justify-content:center; margin-top:-2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; width:fit-content; min-width:200px; z-index:4;">
-        Stevie Chan Memorial 2026
-      </div>
       <script>
       // Dynamically adjust tournament title box width to fit text
       function fitTournamentBox() {
