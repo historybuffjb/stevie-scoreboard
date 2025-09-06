@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scoreboard Portal</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #222; color: #fff; text-align: center; padding-top: 60px; }
+    .container { background: #333; border-radius: 20px; padding: 40px; display: inline-block; }
+    label { font-size: 1.2em; margin: 10px; }
+    input { font-size: 1.2em; margin: 10px; padding: 5px; border-radius: 5px; border: none; }
+    button { font-size: 1.2em; margin: 20px; padding: 10px 30px; border-radius: 10px; border: none; background: #6a5acd; color: #fff; cursor: pointer; }
+    button:hover { background: #483d8b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Scoreboard Portal</h2>
+    <form id="portalForm">
+        <div>
+          <label for="tournament_name">Tournament Name:</label>
+          <input type="text" id="tournament_name" name="tournament_name" placeholder="Stevie Chan Memorial 2026" required>
+        </div>
+      <div>
+        <label for="player1">Player 1 Name:</label>
+        <input type="text" id="player1" name="player1" required>
+      </div>
+      <div>
+        <label for="player2">Player 2 Name:</label>
+        <input type="text" id="player2" name="player2" required>
+      </div>
+      <div>
+        <label for="race">Race to:</label>
+        <input type="number" id="race" name="race" min="1" required>
+      </div>
+      <div>
+        <label for="score1">Player 1 Score:</label>
+        <input type="number" id="score1" name="score1" min="0" required>
+      </div>
+      <div>
+        <label for="score2">Player 2 Score:</label>
+        <input type="number" id="score2" name="score2" min="0" required>
+      </div>
+      <button type="submit">Update</button>
+      <button type="button" id="resetBtn">Reset Scores</button>
+    </form>
+    <div id="status"></div>
+  </div>
+  <script src="fonts.js"></script>
+  <script>
+    async function fetchInitial() {
+      const res = await fetch('/api/scoreboard');
+      const data = await res.json();
+      document.getElementById('player1').value = data.player1;
+      document.getElementById('player2').value = data.player2;
+      document.getElementById('race').value = data.race;
+      document.getElementById('score1').value = data.score1;
+      document.getElementById('score2').value = data.score2;
+      // Font and color config
+  document.getElementById('tournament_name').value = data.config.tournament_name || 'Stevie Chan Memorial 2026';
+    }
+    // Populate font select
+    window.addEventListener('DOMContentLoaded', () => {
+  fetchInitial();
+    });
+
+    document.getElementById('portalForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+  const player1 = document.getElementById('player1').value;
+  const player2 = document.getElementById('player2').value;
+  const race = document.getElementById('race').value;
+  const score1 = document.getElementById('score1').value;
+  const score2 = document.getElementById('score2').value;
+  const tournament_name = document.getElementById('tournament_name').value;
+      let status = '';
+      try {
+        await fetch('/api/scoreboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            player1,
+            player2,
+            race,
+            score1: Number(score1),
+            score2: Number(score2),
+            config: {
+              tournament_name
+            }
+          })
+        });
+        status = 'Updated successfully!';
+        await fetchInitial();
+      } catch {
+        status = 'Error updating!';
+      }
+      document.getElementById('status').textContent = status;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', async function() {
+      try {
+        await fetch('/api/score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ player1: 0, player2: 0 })
+        });
+        document.getElementById('score1').value = 0;
+        document.getElementById('score2').value = 0;
+        document.getElementById('status').textContent = 'Scores reset!';
+      } catch {
+        document.getElementById('status').textContent = 'Error resetting scores!';
+      }
+    });
+  </script>
+</body>
+</html>
