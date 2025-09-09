@@ -114,6 +114,25 @@
       padding-right: calc(2vw * var(--mini-scale));
     }
     
+    /* Score-specific styling to make scores more prominent */
+    .score-value {
+      font-size: clamp(1.2rem, 5vh, 4rem) !important;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 15px #6a5acd, 0 0 3px #fff;
+    }
+    .score-value.mini {
+      font-size: clamp(0.6rem, calc(5vh * var(--mini-scale)), 2rem) !important;
+    }
+    
+    /* Player name styling - slightly smaller than scores */
+    .player-name {
+      font-size: clamp(0.9rem, 3.5vh, 2.5rem) !important;
+    }
+    .player-name.mini {
+      font-size: clamp(0.45rem, calc(3.5vh * var(--mini-scale)), 1.25rem) !important;
+    }
+    
     /* Responsive adjustments for different screen sizes */
     @media (max-width: 1200px) {
       .scorebar {
@@ -163,72 +182,72 @@
 <body>
   <div class="scorebar" id="scorebar1">
       <div class="score-section left">
-        <span id="name1">Player 1</span>
+        <span id="name1" class="player-name">Player 1</span>
       </div>
       <div class="score-section center" style="justify-content: flex-end;">
-        <span id="player1">0</span>
+        <span id="player1" class="score-value">0</span>
       </div>
       <div class="score-section center" style="justify-content: center;">
         Race to <span id="race1" style="font-size:115%; margin-left:0.3em; vertical-align:middle;">7</span>
       </div>
       <div class="score-section center" style="justify-content: flex-start;">
-        <span id="player2">0</span>
+        <span id="player2" class="score-value">0</span>
       </div>
       <div class="score-section right">
-        <span id="name2">Player 2</span>
+        <span id="name2" class="player-name">Player 2</span>
       </div>
     </div>
   <div class="scorebar" id="scorebar2" style="top:5vh; bottom:auto;">
       <div class="score-section left">
-        <span id="name3">Player 3</span>
+        <span id="name3" class="player-name">Player 3</span>
       </div>
       <div class="score-section center" style="justify-content: flex-end;">
-        <span id="player3">0</span>
+        <span id="player3" class="score-value">0</span>
       </div>
       <div class="score-section center" style="justify-content: center;">
         Race to <span id="race2" style="font-size:115%; margin-left:0.3em; vertical-align:middle;">7</span>
       </div>
       <div class="score-section center" style="justify-content: flex-start;">
-        <span id="player4">0</span>
+        <span id="player4" class="score-value">0</span>
       </div>
       <div class="score-section right">
-        <span id="name4">Player 4</span>
+        <span id="name4" class="player-name">Player 4</span>
       </div>
     </div>
 
   <!-- Mini mirrored scoreboards -->
   <div class="scorebar mini-scorebar" id="mini-scorebar1" style="top:2vh; right:2vw; left:auto; width:clamp(300px, 36vw, 600px); height:clamp(20px, 2.1vh, 40px); --mini-scale:0.4;">
       <div class="score-section left mini">
-        <span id="mini-name1">Player 1</span>
+        <span id="mini-name1" class="player-name mini">Player 1</span>
       </div>
       <div class="score-section center mini" style="justify-content: flex-end;">
-        <span id="mini-player1">0</span>
+        <span id="mini-player1" class="score-value mini">0</span>
       </div>
       <div class="score-section center mini" style="justify-content: center;">
-        Race to <span id="mini-race1" style="font-size:calc(1.15em * var(--mini-scale)); margin-left:calc(0.3em * var(--mini-scale)); vertical-align:middle;">7</span>
+        Race to <span id="mini-race1" style="font-size:115%; margin-left:0.3em; vertical-align:middle;">7</span>
       </div>
       <div class="score-section center mini" style="justify-content: flex-start;">
-        <span id="mini-player2">0</span>
+        <span id="mini-player2" class="score-value mini">0</span>
       </div>
       <div class="score-section right mini">
-        <span id="mini-name2">Player 2</span>
+        <span id="mini-name2" class="player-name mini">Player 2</span>
       </div>
     </div>
   <div class="scorebar mini-scorebar" id="mini-scorebar2" style="top:6vh; right:2vw; left:auto; width:clamp(300px, 36vw, 600px); height:clamp(20px, 2.1vh, 40px); --mini-scale:0.4;">
       <div class="score-section left mini">
-        <span id="mini-name3">Player 3</span>
+        <span id="mini-name3" class="player-name mini">Player 3</span>
       </div>
       <div class="score-section center mini" style="justify-content: flex-end;">
-        <span id="mini-player3">0</span>
+        <span id="mini-player3" class="score-value mini">0</span>
       </div>
       <div class="score-section center mini" style="justify-content: center;">
-        Race to <span id="mini-race2" style="font-size:calc(1.15em * var(--mini-scale)); margin-left:calc(0.3em * var(--mini-scale)); vertical-align:middle;">7</span>
+        Race to <span id="mini-race2" style="font-size:115%; margin-left:0.3em; vertical-align:middle;">7</span>
       </div>
       <div class="score-section center mini" style="justify-content: flex-start;">
-        <span id="mini-player4">0</span>
+        <span id="mini-player4" class="score-value mini">0</span>
       </div>
       <div class="score-section right mini">
-        <span id="mini-name4">Player 4</span>
+        <span id="mini-name4" class="player-name mini">Player 4</span>
       </div>
     </div>
       <script>

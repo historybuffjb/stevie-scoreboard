@@ -140,6 +140,75 @@ app.post('/api/scoreboard/visibility', (req, res) => __awaiter(void 0, void 0, v
     yield db.run('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', `${id}_visible`, visible ? '1' : '0');
     res.sendStatus(200);
 }));
+// Individual show/hide endpoints for StreamDeck integration
+app.post('/api/scoreboard/:scoreboardId/show', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { scoreboardId } = req.params;
+        const validIds = ['scorebar1', 'scorebar2', 'mini-scorebar1', 'mini-scorebar2'];
+        if (!validIds.includes(scoreboardId)) {
+            return res.status(400).json({ error: 'Invalid scoreboard ID. Must be: scorebar1, scorebar2, mini-scorebar1, or mini-scorebar2' });
+        }
+        const db = yield (0, db_1.getDb)();
+        yield db.run('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', `${scoreboardId}_visible`, '1');
+        res.json({
+            success: true,
+            scoreboard: scoreboardId,
+            visible: true,
+            message: `${scoreboardId} is now visible`
+        });
+    }
+    catch (error) {
+        console.error('Error in show scoreboard endpoint:', error);
+        res.status(500).json({ error: 'Failed to show scoreboard', details: error instanceof Error ? error.message : String(error) });
+    }
+}));
+app.post('/api/scoreboard/:scoreboardId/hide', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { scoreboardId } = req.params;
+        const validIds = ['scorebar1', 'scorebar2', 'mini-scorebar1', 'mini-scorebar2'];
+        if (!validIds.includes(scoreboardId)) {
+            return res.status(400).json({ error: 'Invalid scoreboard ID. Must be: scorebar1, scorebar2, mini-scorebar1, or mini-scorebar2' });
+        }
+        const db = yield (0, db_1.getDb)();
+        yield db.run('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', `${scoreboardId}_visible`, '0');
+        res.json({
+            success: true,
+            scoreboard: scoreboardId,
+            visible: false,
+            message: `${scoreboardId} is now hidden`
+        });
+    }
+    catch (error) {
+        console.error('Error in hide scoreboard endpoint:', error);
+        res.status(500).json({ error: 'Failed to hide scoreboard', details: error instanceof Error ? error.message : String(error) });
+    }
+}));
+// Toggle endpoint for convenience
+app.post('/api/scoreboard/:scoreboardId/toggle', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { scoreboardId } = req.params;
+        const validIds = ['scorebar1', 'scorebar2', 'mini-scorebar1', 'mini-scorebar2'];
+        if (!validIds.includes(scoreboardId)) {
+            return res.status(400).json({ error: 'Invalid scoreboard ID. Must be: scorebar1, scorebar2, mini-scorebar1, or mini-scorebar2' });
+        }
+        const db = yield (0, db_1.getDb)();
+        const configRows = yield db.all('SELECT * FROM config WHERE key = ?', `${scoreboardId}_visible`);
+        const currentVisibility = configRows.length > 0 ? configRows[0].value : '1'; // Default to visible
+        const newVisibility = currentVisibility === '1' ? '0' : '1';
+        yield db.run('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', `${scoreboardId}_visible`, newVisibility);
+        res.json({
+            success: true,
+            scoreboard: scoreboardId,
+            visible: newVisibility === '1',
+            previousState: currentVisibility === '1',
+            message: `${scoreboardId} is now ${newVisibility === '1' ? 'visible' : 'hidden'}`
+        });
+    }
+    catch (error) {
+        console.error('Error in toggle scoreboard endpoint:', error);
+        res.status(500).json({ error: 'Failed to toggle scoreboard', details: error instanceof Error ? error.message : String(error) });
+    }
+}));
 // Endpoint to reset scoreboard positions and sizes to defaults
 app.post('/api/scoreboard/reset-positions', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const db = yield (0, db_1.getDb)();
@@ -171,6 +240,121 @@ app.post('/api/scoreboard/reset-positions', (req, res) => __awaiter(void 0, void
         yield db.run('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', key, defs[key]);
     }
     res.sendStatus(200);
+}));
+// Score increment/decrement endpoints for StreamDeck integration
+app.post('/api/scoreboard/:boardNumber/player/:playerNumber/increment', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { boardNumber, playerNumber } = req.params;
+        const amount = parseInt(req.body.amount) || 1;
+        if (!['1', '2'].includes(boardNumber) || !['1', '2'].includes(playerNumber)) {
+            return res.status(400).json({ error: 'Invalid board or player number' });
+        }
+        const db = yield (0, db_1.getDb)();
+        let scoreColumn = '';
+        if (boardNumber === '1') {
+            scoreColumn = playerNumber === '1' ? 'player1' : 'player2';
+        }
+        else {
+            scoreColumn = playerNumber === '1' ? 'player3' : 'player4';
+        }
+        // Get current score
+        const [currentScore] = yield db.all('SELECT * FROM score LIMIT 1');
+        const newScore = ((currentScore === null || currentScore === void 0 ? void 0 : currentScore[scoreColumn]) || 0) + amount;
+        // Update score
+        yield db.run(`UPDATE score SET ${scoreColumn} = ? WHERE rowid = 1`, Math.max(0, newScore));
+        res.json({
+            success: true,
+            board: boardNumber,
+            player: playerNumber,
+            newScore: Math.max(0, newScore),
+            change: amount
+        });
+    }
+    catch (error) {
+        console.error('Error in increment endpoint:', error);
+        res.status(500).json({ error: 'Failed to update score', details: error instanceof Error ? error.message : String(error) });
+    }
+}));
+app.post('/api/scoreboard/:boardNumber/player/:playerNumber/decrement', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { boardNumber, playerNumber } = req.params;
+        const amount = parseInt(req.body.amount) || 1;
+        if (!['1', '2'].includes(boardNumber) || !['1', '2'].includes(playerNumber)) {
+            return res.status(400).json({ error: 'Invalid board or player number' });
+        }
+        const db = yield (0, db_1.getDb)();
+        let scoreColumn = '';
+        if (boardNumber === '1') {
+            scoreColumn = playerNumber === '1' ? 'player1' : 'player2';
+        }
+        else {
+            scoreColumn = playerNumber === '1' ? 'player3' : 'player4';
+        }
+        // Get current score
+        const [currentScore] = yield db.all('SELECT * FROM score LIMIT 1');
+        const newScore = Math.max(0, ((currentScore === null || currentScore === void 0 ? void 0 : currentScore[scoreColumn]) || 0) - amount);
+        // Update score
+        yield db.run(`UPDATE score SET ${scoreColumn} = ? WHERE rowid = 1`, newScore);
+        res.json({
+            success: true,
+            board: boardNumber,
+            player: playerNumber,
+            newScore: newScore,
+            change: -amount
+        });
+    }
+    catch (error) {
+        console.error('Error in decrement endpoint:', error);
+        res.status(500).json({ error: 'Failed to update score', details: error instanceof Error ? error.message : String(error) });
+    }
+}));
+// Quick score set endpoint
+app.post('/api/scoreboard/:boardNumber/player/:playerNumber/set', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { boardNumber, playerNumber } = req.params;
+        const score = parseInt(req.body.score);
+        if (!['1', '2'].includes(boardNumber) || !['1', '2'].includes(playerNumber)) {
+            return res.status(400).json({ error: 'Invalid board or player number' });
+        }
+        if (isNaN(score) || score < 0) {
+            return res.status(400).json({ error: 'Invalid score value' });
+        }
+        const db = yield (0, db_1.getDb)();
+        let scoreColumn = '';
+        if (boardNumber === '1') {
+            scoreColumn = playerNumber === '1' ? 'player1' : 'player2';
+        }
+        else {
+            scoreColumn = playerNumber === '1' ? 'player3' : 'player4';
+        }
+        // Update score
+        yield db.run(`UPDATE score SET ${scoreColumn} = ? WHERE rowid = 1`, score);
+        res.json({
+            success: true,
+            board: boardNumber,
+            player: playerNumber,
+            newScore: score
+        });
+    }
+    catch (error) {
+        console.error('Error in set score endpoint:', error);
+        res.status(500).json({ error: 'Failed to set score', details: error instanceof Error ? error.message : String(error) });
+    }
+}));
+// Reset scores endpoint
+app.post('/api/scoreboard/reset-scores', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const db = yield (0, db_1.getDb)();
+        yield db.run('UPDATE score SET player1 = 0, player2 = 0, player3 = 0, player4 = 0 WHERE rowid = 1');
+        res.json({
+            success: true,
+            message: 'All scores reset to 0'
+        });
+    }
+    catch (error) {
+        console.error('Error in reset scores endpoint:', error);
+        res.status(500).json({ error: 'Failed to reset scores', details: error instanceof Error ? error.message : String(error) });
+    }
 }));
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
