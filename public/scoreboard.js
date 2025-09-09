@@ -177,9 +177,11 @@ async function fetchScoreboard() {
         const x = parseFloat(data.config[`${id}_x`] || '0');
         const y = parseFloat(data.config[`${id}_y`] || '0');
         
-        // Apply width and height
-        el.style.width = `${width}vw`;
-        el.style.height = `${height}vh`;
+        console.log(`Applying to ${id}: width=${width}vw, height=${height}vh, scale=${configScale}, x=${x}, y=${y}`);
+        
+        // Apply width and height with !important to override CSS
+        el.style.setProperty('width', `${width}vw`, 'important');
+        el.style.setProperty('height', `${height}vh`, 'important');
         
         // Combine responsive scale with user-configured scale
         const finalScale = baseScale * configScale;
@@ -188,27 +190,27 @@ async function fetchScoreboard() {
         // Handle positioning based on current CSS setup with responsive scaling
         if (id.includes('mini-scoreboard')) {
           // Mini scoreboards are positioned from the right
-          el.style.right = calculateResponsiveSize(`${2 + x}vw`, 'vw');
-          el.style.left = 'auto';
+          el.style.setProperty('right', calculateResponsiveSize(`${2 + x}vw`, 'vw'), 'important');
+          el.style.setProperty('left', 'auto', 'important');
         } else {
           // Full scoreboards are positioned from the left
-          el.style.left = calculateResponsiveSize(`${5 + x}vw`, 'vw');
-          el.style.right = 'auto';
+          el.style.setProperty('left', calculateResponsiveSize(`${5 + x}vw`, 'vw'), 'important');
+          el.style.setProperty('right', 'auto', 'important');
         }
         
         // Set vertical position with responsive scaling
         if (id === 'scorebar1') {
-          el.style.bottom = calculateResponsiveSize(`${5 + y}vh`, 'vh');
-          el.style.top = 'auto';
+          el.style.setProperty('bottom', calculateResponsiveSize(`${5 + y}vh`, 'vh'), 'important');
+          el.style.setProperty('top', 'auto', 'important');
         } else if (id === 'scorebar2') {
-          el.style.top = calculateResponsiveSize(`${5 + y}vh`, 'vh');
-          el.style.bottom = 'auto';
+          el.style.setProperty('top', calculateResponsiveSize(`${5 + y}vh`, 'vh'), 'important');
+          el.style.setProperty('bottom', 'auto', 'important');
         } else if (id === 'mini-scorebar1') {
-          el.style.top = calculateResponsiveSize(`${2 + y}vh`, 'vh');
-          el.style.bottom = 'auto';
+          el.style.setProperty('top', calculateResponsiveSize(`${2 + y}vh`, 'vh'), 'important');
+          el.style.setProperty('bottom', 'auto', 'important');
         } else if (id === 'mini-scorebar2') {
-          el.style.top = calculateResponsiveSize(`${6 + y}vh`, 'vh');
-          el.style.bottom = 'auto';
+          el.style.setProperty('top', calculateResponsiveSize(`${6 + y}vh`, 'vh'), 'important');
+          el.style.setProperty('bottom', 'auto', 'important');
         }
       }
     });

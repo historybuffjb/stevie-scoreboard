@@ -23,7 +23,7 @@ app.use('/scoreboard', express_1.default.static(path_1.default.join(__dirname, '
 app.use('/portal', express_1.default.static(path_1.default.join(__dirname, '../portal')));
 // Consolidated GET endpoint for all scoreboard data
 app.get('/api/scoreboard', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d;
     const db = yield (0, db_1.getDb)();
     const [score] = yield db.all('SELECT * FROM score LIMIT 1');
     const players = yield db.all('SELECT * FROM players ORDER BY id ASC');
@@ -31,6 +31,53 @@ app.get('/api/scoreboard', (req, res) => __awaiter(void 0, void 0, void 0, funct
     const configRows = yield db.all('SELECT * FROM config');
     const config = {};
     configRows.forEach((row) => { config[row.key] = row.value; });
+    // Ensure all default values are present
+    const defaults = {
+        // Visibility defaults
+        scorebar1_visible: '1',
+        scorebar2_visible: '1',
+        'mini-scorebar1_visible': '1',
+        'mini-scorebar2_visible': '1',
+        // Scale defaults
+        scorebar1_scale: '1',
+        scorebar2_scale: '1',
+        'mini-scorebar1_scale': '0.4',
+        'mini-scorebar2_scale': '0.4',
+        // Position defaults
+        scorebar1_x: '0',
+        scorebar1_y: '0',
+        scorebar2_x: '0',
+        scorebar2_y: '0',
+        'mini-scorebar1_x': '0',
+        'mini-scorebar1_y': '0',
+        'mini-scorebar2_x': '0',
+        'mini-scorebar2_y': '0',
+        // Size defaults
+        scorebar1_width: '90',
+        scorebar1_height: '5.28',
+        scorebar2_width: '90',
+        scorebar2_height: '5.28',
+        'mini-scorebar1_width': '36',
+        'mini-scorebar1_height': '2.1',
+        'mini-scorebar2_width': '36',
+        'mini-scorebar2_height': '2.1',
+        // Font and style defaults
+        score_font: 'Metal Mania',
+        score_font_size: '6vh',
+        race_font: 'Metal Mania',
+        race_font_size: '3vh',
+        player_font: 'Metal Mania',
+        player_font_size: '4vh',
+        scorebar_bg: '#23235b',
+        scorebar_fg: '#e0e0e0',
+        tournament_name: 'Stevie Chan Memorial 2026'
+    };
+    // Apply defaults for any missing values
+    Object.keys(defaults).forEach(key => {
+        if (config[key] === undefined) {
+            config[key] = defaults[key];
+        }
+    });
     res.json({
         scoreboard: {
             player1: ((_a = players[0]) === null || _a === void 0 ? void 0 : _a.name) || 'Player 1',
@@ -46,12 +93,7 @@ app.get('/api/scoreboard', (req, res) => __awaiter(void 0, void 0, void 0, funct
             score2: (score === null || score === void 0 ? void 0 : score.player4) || 0,
             race: (race === null || race === void 0 ? void 0 : race.value2) || 7
         },
-        config: Object.assign({}, config, {
-            scorebar1_visible: (_e = config.scorebar1_visible) !== null && _e !== void 0 ? _e : '1',
-            scorebar2_visible: (_f = config.scorebar2_visible) !== null && _f !== void 0 ? _f : '1',
-            'mini-scorebar1_visible': (_g = config['mini-scorebar1_visible']) !== null && _g !== void 0 ? _g : '1',
-            'mini-scorebar2_visible': (_h = config['mini-scorebar2_visible']) !== null && _h !== void 0 ? _h : '1',
-        })
+        config: config
     });
 }));
 // Consolidated POST endpoint for updating scoreboard data
@@ -106,15 +148,23 @@ app.post('/api/scoreboard/reset-positions', (req, res) => __awaiter(void 0, void
         scorebar1_x: 0,
         scorebar1_y: 90,
         scorebar1_scale: 1,
+        scorebar1_width: 90,
+        scorebar1_height: 5.28,
         scorebar2_x: 0,
         scorebar2_y: 80,
         scorebar2_scale: 1,
+        scorebar2_width: 90,
+        scorebar2_height: 5.28,
         'mini-scorebar1_x': 0,
         'mini-scorebar1_y': 5,
         'mini-scorebar1_scale': 0.5,
+        'mini-scorebar1_width': 36,
+        'mini-scorebar1_height': 2.1,
         'mini-scorebar2_x': 0,
         'mini-scorebar2_y': 5,
-        'mini-scorebar2_scale': 0.5
+        'mini-scorebar2_scale': 0.5,
+        'mini-scorebar2_width': 36,
+        'mini-scorebar2_height': 2.1
     };
     const defs = defaults;
     for (const key in defs) {
