@@ -28,21 +28,24 @@
         background: #000;
         color: #e0e0e0;
         text-align: center;
-        width: 1920px;
-        height: 1080px;
+        width: 100vw;
+        height: 100vh;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        box-sizing: border-box;
       }
     .scorebar {
       position: fixed;
       left: 5vw;
       right: 5vw;
-  bottom: 5vh;
-  height: 5.28vh;
+      bottom: 5vh;
+      height: 5.28vh;
+      min-height: 40px;
       width: 90vw;
+      max-width: calc(100vw - 10vw);
       display: flex;
       flex-direction: row;
       align-items: stretch;
@@ -65,21 +68,23 @@
     .score-section.left {
       justify-content: flex-start;
       padding-left: 2vw;
-      font-size: 4vh;
+      font-size: clamp(1rem, 4vh, 3rem);
       font-family: 'Metal Mania', Arial, sans-serif;
       color: #e0e0e0;
       text-shadow: 0 0 10px #6a5acd, 0 0 2px #fff;
       font-weight: bold;
       min-width: 0;
       overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
     .score-section.left.mini {
-      font-size: calc(4vh * var(--mini-scale));
+      font-size: clamp(0.5rem, calc(4vh * var(--mini-scale)), 1.5rem);
       padding-left: calc(2vw * var(--mini-scale));
     }
     .score-section.center {
       justify-content: center;
-      font-size: 3vh;
+      font-size: clamp(0.8rem, 3vh, 2.5rem);
       font-family: 'Metal Mania', Arial, sans-serif;
       color: #fff;
       text-shadow: 0 0 20px #6a5acd, 0 0 2px #fff;
@@ -87,24 +92,72 @@
       letter-spacing: 0.1em;
       min-width: 0;
       overflow: hidden;
+      white-space: nowrap;
     }
     .score-section.center.mini {
-      font-size: calc(3vh * var(--mini-scale));
+      font-size: clamp(0.4rem, calc(3vh * var(--mini-scale)), 1.2rem);
     }
     .score-section.right {
       justify-content: flex-end;
       padding-right: 2vw;
-      font-size: 4vh;
+      font-size: clamp(1rem, 4vh, 3rem);
       font-family: 'Metal Mania', Arial, sans-serif;
       color: #e0e0e0;
       text-shadow: 0 0 10px #6a5acd, 0 0 2px #fff;
       font-weight: bold;
       min-width: 0;
       overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
     .score-section.right.mini {
-      font-size: calc(4vh * var(--mini-scale));
+      font-size: clamp(0.5rem, calc(4vh * var(--mini-scale)), 1.5rem);
       padding-right: calc(2vw * var(--mini-scale));
+    }
+    
+    /* Responsive adjustments for different screen sizes */
+    @media (max-width: 1200px) {
+      .scorebar {
+        height: 6vh;
+        min-height: 45px;
+      }
+      .score-section.left, .score-section.right {
+        font-size: clamp(0.8rem, 3.5vh, 2.5rem);
+      }
+      .score-section.center {
+        font-size: clamp(0.7rem, 2.5vh, 2rem);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .scorebar {
+        height: 7vh;
+        min-height: 50px;
+        left: 2vw;
+        right: 2vw;
+        width: 96vw;
+      }
+      .score-section.left, .score-section.right {
+        font-size: clamp(0.7rem, 3vh, 2rem);
+        padding-left: 1vw;
+        padding-right: 1vw;
+      }
+      .score-section.center {
+        font-size: clamp(0.6rem, 2vh, 1.5rem);
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .scorebar {
+        height: 8vh;
+        min-height: 55px;
+      }
+      .score-section.left, .score-section.right {
+        font-size: clamp(0.6rem, 2.5vh, 1.5rem);
+      }
+      .score-section.center {
+        font-size: clamp(0.5rem, 1.8vh, 1.2rem);
+      }
     }
   </style>
 </head>
@@ -145,7 +198,7 @@
     </div>
 
   <!-- Mini mirrored scoreboards -->
-  <div class="scorebar mini-scorebar" id="mini-scorebar1" style="top:2vh; right:2vw; left:auto; width:36vw; height:2.1vh; --mini-scale:0.4;">
+  <div class="scorebar mini-scorebar" id="mini-scorebar1" style="top:2vh; right:2vw; left:auto; width:clamp(300px, 36vw, 600px); height:clamp(20px, 2.1vh, 40px); --mini-scale:0.4;">
       <div class="score-section left mini">
         <span id="mini-name1">Player 1</span>
       </div>
@@ -162,7 +215,7 @@
         <span id="mini-name2">Player 2</span>
       </div>
     </div>
-  <div class="scorebar mini-scorebar" id="mini-scorebar2" style="top:6vh; right:2vw; left:auto; width:36vw; height:2.1vh; --mini-scale:0.4;">
+  <div class="scorebar mini-scorebar" id="mini-scorebar2" style="top:6vh; right:2vw; left:auto; width:clamp(300px, 36vw, 600px); height:clamp(20px, 2.1vh, 40px); --mini-scale:0.4;">
       <div class="score-section left mini">
         <span id="mini-name3">Player 3</span>
       </div>
@@ -185,8 +238,23 @@
         const tournament = document.getElementById('tournament-title');
         if (tournament) {
           const margin = 24; // px
-          const width = tournament.scrollWidth + margin * 2;
-          tournament.style.width = width + 'px';
+          const maxWidth = window.innerWidth * 0.8; // Max 80% of screen width
+          
+          // Reset width to auto to measure content
+          tournament.style.width = 'auto';
+          const contentWidth = tournament.scrollWidth + margin * 2;
+          
+          // Set width to content or max width, whichever is smaller
+          tournament.style.width = Math.min(contentWidth, maxWidth) + 'px';
+          
+          // If text is still overflowing, reduce font size
+          if (tournament.scrollWidth > maxWidth - margin * 2) {
+            let fontSize = parseFloat(window.getComputedStyle(tournament).fontSize);
+            while (tournament.scrollWidth > maxWidth - margin * 2 && fontSize > 12) {
+              fontSize *= 0.95;
+              tournament.style.fontSize = fontSize + 'px';
+            }
+          }
         }
       }
       window.addEventListener('DOMContentLoaded', fitTournamentBox);

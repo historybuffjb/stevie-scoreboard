@@ -19,6 +19,55 @@ app.get('/api/scoreboard', async (req, res) => {
   const configRows = await db.all('SELECT * FROM config');
   const config: Record<string, string> = {};
   configRows.forEach((row: any) => { config[row.key] = row.value; });
+  
+  // Ensure all default values are present
+  const defaults: Record<string, string> = {
+    // Visibility defaults
+    scorebar1_visible: '1',
+    scorebar2_visible: '1',
+    'mini-scorebar1_visible': '1',
+    'mini-scorebar2_visible': '1',
+    // Scale defaults
+    scorebar1_scale: '1',
+    scorebar2_scale: '1',
+    'mini-scorebar1_scale': '0.4',
+    'mini-scorebar2_scale': '0.4',
+    // Position defaults
+    scorebar1_x: '0',
+    scorebar1_y: '0',
+    scorebar2_x: '0',
+    scorebar2_y: '0',
+    'mini-scorebar1_x': '0',
+    'mini-scorebar1_y': '0',
+    'mini-scorebar2_x': '0',
+    'mini-scorebar2_y': '0',
+    // Size defaults
+    scorebar1_width: '90',
+    scorebar1_height: '5.28',
+    scorebar2_width: '90',
+    scorebar2_height: '5.28',
+    'mini-scorebar1_width': '36',
+    'mini-scorebar1_height': '2.1',
+    'mini-scorebar2_width': '36',
+    'mini-scorebar2_height': '2.1',
+    // Font and style defaults
+    score_font: 'Metal Mania',
+    score_font_size: '6vh',
+    race_font: 'Metal Mania',
+    race_font_size: '3vh',
+    player_font: 'Metal Mania',
+    player_font_size: '4vh',
+    scorebar_bg: '#23235b',
+    scorebar_fg: '#e0e0e0',
+    tournament_name: 'Stevie Chan Memorial 2026'
+  };
+  
+  // Apply defaults for any missing values
+  Object.keys(defaults).forEach(key => {
+    if (config[key] === undefined) {
+      config[key] = defaults[key];
+    }
+  });
   res.json({
     scoreboard: {
       player1: players[0]?.name || 'Player 1',
@@ -34,12 +83,7 @@ app.get('/api/scoreboard', async (req, res) => {
       score2: score?.player4 || 0,
       race: race?.value2 || 7
     },
-    config: Object.assign({}, config, {
-      scorebar1_visible: config.scorebar1_visible ?? '1',
-      scorebar2_visible: config.scorebar2_visible ?? '1',
-      'mini-scorebar1_visible': config['mini-scorebar1_visible'] ?? '1',
-      'mini-scorebar2_visible': config['mini-scorebar2_visible'] ?? '1',
-    })
+    config: config
   });
 });
 
@@ -98,15 +142,23 @@ app.post('/api/scoreboard/reset-positions', async (req, res) => {
     scorebar1_x: 0,
     scorebar1_y: 90,
     scorebar1_scale: 1,
+    scorebar1_width: 90,
+    scorebar1_height: 5.28,
     scorebar2_x: 0,
     scorebar2_y: 80,
     scorebar2_scale: 1,
+    scorebar2_width: 90,
+    scorebar2_height: 5.28,
     'mini-scorebar1_x': 0,
     'mini-scorebar1_y': 5,
     'mini-scorebar1_scale': 0.5,
+    'mini-scorebar1_width': 36,
+    'mini-scorebar1_height': 2.1,
     'mini-scorebar2_x': 0,
     'mini-scorebar2_y': 5,
-    'mini-scorebar2_scale': 0.5
+    'mini-scorebar2_scale': 0.5,
+    'mini-scorebar2_width': 36,
+    'mini-scorebar2_height': 2.1
   };
   const defs: any = defaults;
   for (const key in defs) {

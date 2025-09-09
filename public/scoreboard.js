@@ -1,5 +1,73 @@
 const lastValues = {};
 
+// Dynamic sizing functionality
+function getViewportScale() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const baseWidth = 1920;
+  const baseHeight = 1080;
+  
+  // Calculate scale based on both dimensions, using the smaller scale to ensure fit
+  const scaleX = vw / baseWidth;
+  const scaleY = vh / baseHeight;
+  return Math.min(scaleX, scaleY);
+}
+
+function calculateResponsiveSize(baseSize, unit = 'vh') {
+  const scale = getViewportScale();
+  const numericValue = parseFloat(baseSize);
+  
+  if (unit === 'vh') {
+    // Convert vh to px based on actual viewport and scale
+    return `${(numericValue * window.innerHeight / 100) * scale}px`;
+  } else if (unit === 'vw') {
+    // Convert vw to px based on actual viewport and scale
+    return `${(numericValue * window.innerWidth / 100) * scale}px`;
+  } else if (unit === 'em' || unit === 'rem') {
+    // Scale em/rem units
+    return `${numericValue * scale}${unit}`;
+  }
+  return baseSize;
+}
+
+function applyResponsiveSizing() {
+  const scale = getViewportScale();
+  
+  // Apply scaling to all scoreboards
+  document.querySelectorAll('.scorebar').forEach(scorebar => {
+    // Instead of scaling the entire element, we'll adjust positioning and sizes
+    const rect = scorebar.getBoundingClientRect();
+    if (rect.width > window.innerWidth || rect.height > window.innerHeight) {
+      // If content overflows, apply additional scaling
+      const overflowScale = Math.min(
+        window.innerWidth / rect.width,
+        window.innerHeight / rect.height
+      ) * 0.95; // 95% to ensure some margin
+      
+      if (overflowScale < 1) {
+        scorebar.style.transform = `scale(${overflowScale})`;
+        scorebar.style.transformOrigin = 'center center';
+      }
+    }
+  });
+  
+  // Ensure text fits within containers
+  document.querySelectorAll('.score-section').forEach(section => {
+    const span = section.querySelector('span');
+    if (span) {
+      // Check if text is overflowing
+      if (span.scrollWidth > section.clientWidth) {
+        // Reduce font size until it fits
+        let fontSize = parseFloat(window.getComputedStyle(span).fontSize);
+        while (span.scrollWidth > section.clientWidth && fontSize > 8) {
+          fontSize *= 0.95;
+          span.style.fontSize = `${fontSize}px`;
+        }
+      }
+    }
+  });
+}
+
 function animateChange(id, newValue) {
   const el = document.getElementById(id);
   if (lastValues[id] === undefined) {
@@ -55,33 +123,33 @@ async function fetchScoreboard() {
   }
   // Apply config
   if (data.config) {
-    // Score font and size
+    // Score font and size with responsive scaling
     const score1 = document.getElementById('player1');
     const score2 = document.getElementById('player2');
     if (score1) {
       score1.style.fontFamily = data.config.score_font || 'Metal Mania';
-      score1.style.fontSize = data.config.score_font_size || '6vh';
+      score1.style.fontSize = calculateResponsiveSize(data.config.score_font_size || '6vh');
     }
     if (score2) {
       score2.style.fontFamily = data.config.score_font || 'Metal Mania';
-      score2.style.fontSize = data.config.score_font_size || '6vh';
+      score2.style.fontSize = calculateResponsiveSize(data.config.score_font_size || '6vh');
     }
-    // Race to font and size
+    // Race to font and size with responsive scaling
     const race = document.getElementById('race');
     if (race) {
       race.style.fontFamily = data.config.race_font || 'Metal Mania';
-      race.style.fontSize = data.config.race_font_size || '3vh';
+      race.style.fontSize = calculateResponsiveSize(data.config.race_font_size || '3vh');
     }
-    // Player name font and size
+    // Player name font and size with responsive scaling
     const name1 = document.getElementById('name1');
     const name2 = document.getElementById('name2');
     if (name1) {
       name1.style.fontFamily = data.config.player_font || 'Metal Mania';
-      name1.style.fontSize = data.config.player_font_size || '4vh';
+      name1.style.fontSize = calculateResponsiveSize(data.config.player_font_size || '4vh');
     }
     if (name2) {
       name2.style.fontFamily = data.config.player_font || 'Metal Mania';
-      name2.style.fontSize = data.config.player_font_size || '4vh';
+      name2.style.fontSize = calculateResponsiveSize(data.config.player_font_size || '4vh');
     }
     // Scorebar colors (for all scorebars)
     document.querySelectorAll('.scorebar').forEach(scorebar => {
@@ -98,44 +166,69 @@ async function fetchScoreboard() {
       }
     });
 
-    // Apply scale and position for each scoreboard
+    // Apply scale and position for each scoreboard with responsive sizing
+    const baseScale = getViewportScale();
     ['scorebar1', 'scorebar2', 'mini-scorebar1', 'mini-scorebar2'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        const scale = parseFloat(data.config[`${id}_scale`] || '1');
+        const configScale = parseFloat(data.config[`${id}_scale`] || '1');
+        const width = parseFloat(data.config[`${id}_width`] || (id.includes('mini') ? '36' : '90'));
+        const height = parseFloat(data.config[`${id}_height`] || (id.includes('mini') ? '2.1' : '5.28'));
         const x = parseFloat(data.config[`${id}_x`] || '0');
         const y = parseFloat(data.config[`${id}_y`] || '0');
-        el.style.setProperty('--mini-scale', scale);
         
-        // Handle positioning based on current CSS setup
+        // Apply width and height
+        el.style.width = `${width}vw`;
+        el.style.height = `${height}vh`;
+        
+        // Combine responsive scale with user-configured scale
+        const finalScale = baseScale * configScale;
+        el.style.setProperty('--mini-scale', configScale);
+        
+        // Handle positioning based on current CSS setup with responsive scaling
         if (id.includes('mini-scoreboard')) {
           // Mini scoreboards are positioned from the right
-          el.style.right = `${2 + x}vw`;
+          el.style.right = calculateResponsiveSize(`${2 + x}vw`, 'vw');
           el.style.left = 'auto';
         } else {
           // Full scoreboards are positioned from the left
-          el.style.left = `${5 + x}vw`;
+          el.style.left = calculateResponsiveSize(`${5 + x}vw`, 'vw');
           el.style.right = 'auto';
         }
         
-        // Set vertical position
+        // Set vertical position with responsive scaling
         if (id === 'scorebar1') {
-          el.style.bottom = `${5 + y}vh`;
+          el.style.bottom = calculateResponsiveSize(`${5 + y}vh`, 'vh');
           el.style.top = 'auto';
         } else if (id === 'scorebar2') {
-          el.style.top = `${5 + y}vh`;
+          el.style.top = calculateResponsiveSize(`${5 + y}vh`, 'vh');
           el.style.bottom = 'auto';
         } else if (id === 'mini-scorebar1') {
-          el.style.top = `${2 + y}vh`;
+          el.style.top = calculateResponsiveSize(`${2 + y}vh`, 'vh');
           el.style.bottom = 'auto';
         } else if (id === 'mini-scorebar2') {
-          el.style.top = `${6 + y}vh`;
+          el.style.top = calculateResponsiveSize(`${6 + y}vh`, 'vh');
           el.style.bottom = 'auto';
         }
       }
     });
   }
+  
+  // Apply responsive sizing after all config is applied
+  applyResponsiveSizing();
 }
 
 setInterval(fetchScoreboard, 1000);
 fetchScoreboard();
+
+// Add resize event listener for dynamic sizing
+window.addEventListener('resize', () => {
+  applyResponsiveSizing();
+  // Re-fetch to reapply all sizing calculations
+  fetchScoreboard();
+});
+
+// Apply initial responsive sizing
+window.addEventListener('DOMContentLoaded', () => {
+  applyResponsiveSizing();
+});

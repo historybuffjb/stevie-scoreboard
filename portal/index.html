@@ -76,6 +76,14 @@
         <input type="number" id="sizeInput" min="0.1" max="2" step="0.01" value="1">
       </div>
       <div>
+        <label for="widthInput">Width (% of viewport):</label>
+        <input type="number" id="widthInput" min="10" max="100" step="1" value="90" placeholder="90">
+      </div>
+      <div>
+        <label for="heightInput">Height (vh units):</label>
+        <input type="number" id="heightInput" min="1" max="20" step="0.1" value="5.28" placeholder="5.28">
+      </div>
+      <div>
         <label for="xInput">X Offset (vw):</label>
         <input type="number" id="xInput" min="0" max="100" step="0.1" value="0">
       </div>
@@ -108,10 +116,37 @@
         document.getElementById('race').value = data.scoreboard2.race;
       }
       document.getElementById('tournament_name').value = data.config.tournament_name || 'Stevie Chan Memorial 2026';
+      
+      // Load current configuration for the selected scoreboard
+      loadScoreboardConfig(data.config);
+      
+      // Store the full config data for use by other functions
+      window.currentConfig = data.config;
+    }
+
+    function loadScoreboardConfig(config) {
+      const id = document.getElementById('scoreboardSelect').value;
+      
+      // Set default values or load from config
+      document.getElementById('sizeInput').value = config[`${id}_scale`] || '1';
+      document.getElementById('widthInput').value = config[`${id}_width`] || (id.includes('mini') ? '36' : '90');
+      document.getElementById('heightInput').value = config[`${id}_height`] || (id.includes('mini') ? '2.1' : '5.28');
+      document.getElementById('xInput').value = config[`${id}_x`] || '0';
+      document.getElementById('yInput').value = config[`${id}_y`] || '0';
+      
+      // Set visibility
+      const visible = config[`${id}_visible`] !== '0';
+      document.getElementById('visibleSelect').value = visible ? 'true' : 'false';
     }
     window.addEventListener('DOMContentLoaded', () => {
       fetchInitial();
       document.getElementById('scoreboardDataSelect').addEventListener('change', fetchInitial);
+      document.getElementById('scoreboardSelect').addEventListener('change', () => {
+        // When scoreboard config selection changes, load values from stored config
+        if (window.currentConfig) {
+          loadScoreboardConfig(window.currentConfig);
+        }
+      });
     });
 
     document.getElementById('portalForm').addEventListener('submit', async function(e) {
@@ -188,7 +223,7 @@
           headers: { 'Content-Type': 'application/json' }
         });
         status = 'Scoreboard positions reset!';
-        await fetchInitial();
+        await fetchInitial(); // Refresh all data including config
       } catch {
         status = 'Error resetting positions!';
       }
@@ -200,6 +235,8 @@
       const id = document.getElementById('scoreboardSelect').value;
       const visible = document.getElementById('visibleSelect').value === 'true';
       const scale = parseFloat(document.getElementById('sizeInput').value);
+      const width = parseFloat(document.getElementById('widthInput').value);
+      const height = parseFloat(document.getElementById('heightInput').value);
       const x = parseFloat(document.getElementById('xInput').value);
       const y = parseFloat(document.getElementById('yInput').value);
       let status = '';
@@ -210,24 +247,40 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, visible })
         });
-        // Size and position
+        // Size, dimensions, and position
         await fetch('/api/scoreboard', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             config: {
               [`${id}_scale`]: scale,
+              [`${id}_width`]: width,
+              [`${id}_height`]: height,
               [`${id}_x`]: x,
               [`${id}_y`]: y
             }
           })
         });
         status = 'Configuration applied!';
+        
+        // Refresh the config data to keep it in sync
+        await fetchConfigData();
       } catch {
         status = 'Error applying configuration!';
       }
       document.getElementById('status').textContent = status;
     });
+
+    // Helper function to refresh just the config data
+    async function fetchConfigData() {
+      try {
+        const res = await fetch('/api/scoreboard');
+        const data = await res.json();
+        window.currentConfig = data.config;
+      } catch (error) {
+        console.error('Error fetching config data:', error);
+      }
+    }
   </script>
 </body>
 </html>
