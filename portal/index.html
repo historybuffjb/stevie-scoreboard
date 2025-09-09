@@ -17,76 +17,142 @@
   <div class="container">
     <h2>Scoreboard Portal</h2>
     <form id="portalForm">
-        <div>
-          <label for="tournament_name">Tournament Name:</label>
-          <input type="text" id="tournament_name" name="tournament_name" placeholder="Stevie Chan Memorial 2026" required>
-        </div>
       <div>
-        <label for="player1">Player 1 Name:</label>
-        <input type="text" id="player1" name="player1" required>
+        <label for="scoreboardDataSelect">Select Full Scoreboard:</label>
+        <select id="scoreboardDataSelect">
+          <option value="1">Full Scoreboard 1</option>
+          <option value="2">Full Scoreboard 2</option>
+        </select>
       </div>
       <div>
-        <label for="player2">Player 2 Name:</label>
-        <input type="text" id="player2" name="player2" required>
+        <label for="tournament_name">Tournament Name:</label>
+        <input type="text" id="tournament_name" name="tournament_name" placeholder="Stevie Chan Memorial 2026" required>
+      </div>
+      <div>
+        <label for="playerA">Player 1 Name:</label>
+        <input type="text" id="playerA" name="playerA" required>
+      </div>
+      <div>
+        <label for="playerB">Player 2 Name:</label>
+        <input type="text" id="playerB" name="playerB" required>
       </div>
       <div>
         <label for="race">Race to:</label>
         <input type="number" id="race" name="race" min="1" required>
       </div>
       <div>
-        <label for="score1">Player 1 Score:</label>
-        <input type="number" id="score1" name="score1" min="0" required>
+        <label for="scoreA">Player 1 Score:</label>
+        <input type="number" id="scoreA" name="scoreA" min="0" required>
       </div>
       <div>
-        <label for="score2">Player 2 Score:</label>
-        <input type="number" id="score2" name="score2" min="0" required>
+        <label for="scoreB">Player 2 Score:</label>
+        <input type="number" id="scoreB" name="scoreB" min="0" required>
       </div>
       <button type="submit">Update</button>
-      <button type="button" id="resetBtn">Reset Scores</button>
+  <button type="button" id="resetBtn">Reset Scores</button>
+  <button type="button" id="resetPositionsBtn">Reset Scoreboard Positions</button>
     </form>
+    <hr>
+    <h3>Scoreboard Configuration</h3>
+    <div id="scoreboard-config">
+      <div>
+        <label for="scoreboardSelect">Select Scoreboard:</label>
+        <select id="scoreboardSelect">
+          <option value="scorebar1">Full Scoreboard 1</option>
+          <option value="scorebar2">Full Scoreboard 2</option>
+          <option value="mini-scorebar1">Mini Scoreboard 1</option>
+          <option value="mini-scorebar2">Mini Scoreboard 2</option>
+        </select>
+      </div>
+      <div>
+        <label for="visibleSelect">Visibility:</label>
+        <select id="visibleSelect">
+          <option value="true">Show</option>
+          <option value="false">Hide</option>
+        </select>
+      </div>
+      <div>
+        <label for="sizeInput">Size (scale):</label>
+        <input type="number" id="sizeInput" min="0.1" max="2" step="0.01" value="1">
+      </div>
+      <div>
+        <label for="xInput">X Offset (vw):</label>
+        <input type="number" id="xInput" min="0" max="100" step="0.1" value="0">
+      </div>
+      <div>
+        <label for="yInput">Y Offset (vh):</label>
+        <input type="number" id="yInput" min="0" max="100" step="0.1" value="0">
+      </div>
+      <button type="button" id="applyConfigBtn">Apply Configuration</button>
+    </div>
     <div id="status"></div>
   </div>
-  <script src="fonts.js"></script>
-  <script>
+    <script src="fonts.js"></script>
+    <script>
     async function fetchInitial() {
       const res = await fetch('/api/scoreboard');
       const data = await res.json();
-      document.getElementById('player1').value = data.player1;
-      document.getElementById('player2').value = data.player2;
-      document.getElementById('race').value = data.race;
-      document.getElementById('score1').value = data.score1;
-      document.getElementById('score2').value = data.score2;
-      // Font and color config
-  document.getElementById('tournament_name').value = data.config.tournament_name || 'Stevie Chan Memorial 2026';
+      // Default to scoreboard 1
+      const sb = document.getElementById('scoreboardDataSelect').value;
+      if (sb === '1') {
+        document.getElementById('playerA').value = data.scoreboard.player1;
+        document.getElementById('playerB').value = data.scoreboard.player2;
+        document.getElementById('scoreA').value = data.scoreboard.score1;
+        document.getElementById('scoreB').value = data.scoreboard.score2;
+        document.getElementById('race').value = data.scoreboard.race;
+      } else {
+        document.getElementById('playerA').value = data.scoreboard2.player1;
+        document.getElementById('playerB').value = data.scoreboard2.player2;
+        document.getElementById('scoreA').value = data.scoreboard2.score1;
+        document.getElementById('scoreB').value = data.scoreboard2.score2;
+        document.getElementById('race').value = data.scoreboard2.race;
+      }
+      document.getElementById('tournament_name').value = data.config.tournament_name || 'Stevie Chan Memorial 2026';
     }
-    // Populate font select
     window.addEventListener('DOMContentLoaded', () => {
-  fetchInitial();
+      fetchInitial();
+      document.getElementById('scoreboardDataSelect').addEventListener('change', fetchInitial);
     });
 
     document.getElementById('portalForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-  const player1 = document.getElementById('player1').value;
-  const player2 = document.getElementById('player2').value;
-  const race = document.getElementById('race').value;
-  const score1 = document.getElementById('score1').value;
-  const score2 = document.getElementById('score2').value;
-  const tournament_name = document.getElementById('tournament_name').value;
+      const sb = document.getElementById('scoreboardDataSelect').value;
+      const playerA = document.getElementById('playerA').value;
+      const playerB = document.getElementById('playerB').value;
+      const race = document.getElementById('race').value;
+      const scoreA = document.getElementById('scoreA').value;
+      const scoreB = document.getElementById('scoreB').value;
+      const tournament_name = document.getElementById('tournament_name').value;
       let status = '';
       try {
+        let body;
+        if (sb === '1') {
+          body = {
+            scoreboard: {
+              player1: playerA,
+              player2: playerB,
+              race,
+              score1: Number(scoreA),
+              score2: Number(scoreB)
+            },
+            config: { tournament_name }
+          };
+        } else {
+          body = {
+            scoreboard2: {
+              player1: playerA,
+              player2: playerB,
+              race,
+              score1: Number(scoreA),
+              score2: Number(scoreB)
+            },
+            config: { tournament_name }
+          };
+        }
         await fetch('/api/scoreboard', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            player1,
-            player2,
-            race,
-            score1: Number(score1),
-            score2: Number(score2),
-            config: {
-              tournament_name
-            }
-          })
+          body: JSON.stringify(body)
         });
         status = 'Updated successfully!';
         await fetchInitial();
@@ -98,17 +164,69 @@
 
     document.getElementById('resetBtn').addEventListener('click', async function() {
       try {
-        await fetch('/api/score', {
+        await fetch('/api/scoreboard', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ player1: 0, player2: 0 })
+          body: JSON.stringify({ 
+            scoreboard: { score1: 0, score2: 0 },
+            scoreboard2: { score1: 0, score2: 0 }
+          })
         });
-        document.getElementById('score1').value = 0;
-        document.getElementById('score2').value = 0;
+        document.getElementById('scoreA').value = 0;
+        document.getElementById('scoreB').value = 0;
         document.getElementById('status').textContent = 'Scores reset!';
       } catch {
         document.getElementById('status').textContent = 'Error resetting scores!';
       }
+    });
+
+    document.getElementById('resetPositionsBtn').addEventListener('click', async function() {
+      let status = '';
+      try {
+        await fetch('/api/scoreboard/reset-positions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        status = 'Scoreboard positions reset!';
+        await fetchInitial();
+      } catch {
+        status = 'Error resetting positions!';
+      }
+      document.getElementById('status').textContent = status;
+    });
+
+    // Apply Configuration logic
+    document.getElementById('applyConfigBtn').addEventListener('click', async function() {
+      const id = document.getElementById('scoreboardSelect').value;
+      const visible = document.getElementById('visibleSelect').value === 'true';
+      const scale = parseFloat(document.getElementById('sizeInput').value);
+      const x = parseFloat(document.getElementById('xInput').value);
+      const y = parseFloat(document.getElementById('yInput').value);
+      let status = '';
+      try {
+        // Visibility
+        await fetch('/api/scoreboard/visibility', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, visible })
+        });
+        // Size and position
+        await fetch('/api/scoreboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            config: {
+              [`${id}_scale`]: scale,
+              [`${id}_x`]: x,
+              [`${id}_y`]: y
+            }
+          })
+        });
+        status = 'Configuration applied!';
+      } catch {
+        status = 'Error applying configuration!';
+      }
+      document.getElementById('status').textContent = status;
     });
   </script>
 </body>
